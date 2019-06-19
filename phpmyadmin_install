@@ -1,0 +1,12 @@
+#!/bin/bash
+
+phpmyadmin=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "PMA on juba installeeritud!")
+if [ $PMA -eq 0 ];
+then
+	echo "PMA installeerimine..."
+	sudo apt-get install -y phpmyadmin;
+elif [ $PMA -eq 1 ];
+then
+	echo "PMA on paigaldatud!"
+	sudo service phpmyadmin status
+fi
