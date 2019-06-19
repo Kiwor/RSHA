@@ -3,7 +3,7 @@
 php=$(dpkg-query -W -f='${Status}' php7.0 2>/dev/null | grep -c "Installeeritud")
 if [ $php -eq 0 ];
 then
-	sudo apt install php7.0 -y;
+	sudo apt-get install -y php php-curl php-mbstring php-mysql php-xmlrpc php-gettext;
 elif [ $php -eq 1 ];
 then
 	php -v
