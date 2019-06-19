@@ -1,0 +1,109 @@
+#!/bin/bash
+
+APACHE2=$(dpkg-query -W -f='${status}' apache2 2>/dev/null | grep -c "Installeeritud")
+if [ $APACHE2 -eq 0 ]
+then
+	echo "Apache2 installeerimine"
+	sudo apt-get install apache2 -y
+elif [ $APACHE2 -eq 1 ]
+then
+	echo "Apache2 on installeeritud"
+	systemctl status apache2
+fi
+
+# MySQL
+mysql=$(dpkg-query -W -f='${status}' mysql 2>/dev/null | grep -c "MySQL on juba installeeritud")
+if [ $mysql -eq 0 ]
+then
+	echo "Installeerimine..."
+	apt-get install mysql-server -y
+
+elif [ $mysql -eq 1 ]
+then
+	echo "MySQL on installitud"
+	systemctl status mysql
+fi
+
+# PHP
+php=$(dpkg-query -W -f='${Status}' php7.0 2>/dev/null | grep -c "PHP on juba installeeritud")
+if [ $php -eq 0 ];
+then
+	echo "PHP installeerimine"
+	sudo apt-get install -y php php-curl php-mbstring php-mysql php-xmlrpc php-gettext;
+elif [ $php -eq 1 ];
+then
+	echo "PHP on installeeritud"
+	php -v
+fi
+
+# PHPMyAdmin
+phpmyadmin=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "PMA on juba installeeritud!")
+if [ $phpmyadmin -eq 0 ];
+then
+	echo "PMA installeerimine..."
+	sudo apt-get install -y phpmyadmin;
+elif [ $phpmyadmin -eq 1 ];
+then
+	echo "PMA on paigaldatud!"
+	sudo service phpmyadmin status
+fi
+
+echo "############################################"
+echo "Wordpress-i installeerimine..."
+echo "############################################"
+echo "Andmebaasi nimi: "
+read -e dbname
+echo "Andmebaasi kasutaja: "
+read -e dbuser
+echo "Andmebaasi parool: "
+read -s dbpass
+echo "Valmis installeerimiseks? (y/n)"
+read -e run
+if [ "$run" == n ];
+then
+exit
+else
+echo "############################################"
+echo "Paigaldame Wordpress-i"...
+echo "############################################"
+# download wordpress
+curl -O https://wordpress.org/latest.tar.gz
+#unzip wordpress
+tar -zxvf latest.tar.gz
+# change dir to wordpress
+cd wordpress
+# copy file to parent dir
+cp -rf . ..
+# move back to parent dir
+cd ..
+# remove files from wordpress folder
+rm -R wordpress
+# create wp config
+cp wp-config-sample.php wp-config.php
+# set database details with perl find and replace
+perl -pi -e "s/database_name_here/$dbname/g" wp-config.php
+perl -pi -e "s/username_here/$dbuser/g" wp-config.php
+perl -pi -e "s/password_here/$dbpass/g" wp-config.php
+
+# set WP salts
+perl -i -pe'
+  BEGIN {
+    @chars = ("a" .. "z", "A" .. "Z", 0 .. 9);
+    push @chars, split //, "!@#$%^&*()-_ []{}<>~\`+=,.;:/?|";
+    sub salt { join "", map $chars[ rand @chars ], 1 .. 64 }
+  }
+  s/put your unique phrase here/salt()/ge
+' wp-config.php
+
+# create uploads folder and set permissions
+mkdir wp-content/uploads
+chmod 775 wp-content/uploads
+echo "Puhastame"
+#remove zip file
+rm latest.tar.gz
+#remove bash script
+rm wp.sh
+echo "############################################"
+echo "Wordpress on paigaldatud ja ülesseatud!"
+echo "############################################"
+fi
