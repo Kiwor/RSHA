@@ -14,7 +14,8 @@ SQL="${k1}${k2}${k3}${k4}"
 
 echo $sql
 sudo mysql -e "$sql"
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ];
+then
         touch /home/$kasutajanimi/.my.cnf
         echo "[Client]" >> /home/$kasutajanimi/.my.cnf
         echo "user=$kasutajanimi" >> /home/$kasutajanimi/.my.cnf
